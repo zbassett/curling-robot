@@ -1,0 +1,24 @@
+{% extends "curling/base_generic.html" %}
+
+{% block content %}
+
+  <div data-role="navbar">
+    <ul>
+      <li><a href="/curling/club/">Club</a></li>
+      <li><a href="#anylink">Sheet</a></li>
+      <li><a href="/curling/setup/rock/">Rock</a></li>
+    </ul>
+  </div>
+
+    <form method="POST">{% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" name="add_person" class="save btn btn-default">Save</button>
+    </form>
+
+    <form method="POST">{% csrf_token %}
+        {{ formRFID.as_p }}
+        <button type="submit" name="assign_rfid" class="save btn btn-default">Save</button>
+    </form>
+
+
+{% endblock %}

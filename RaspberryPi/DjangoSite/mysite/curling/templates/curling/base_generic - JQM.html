@@ -1,0 +1,50 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="stylesheet" href={% static '/curling/jquery.mobile-1.4.5.min.css' %}>
+<script src={% static '/curling/jquery-1.11.3.min.js' %}></script>
+<script src={% static '/curling/jquery.mobile-1.4.5.min.js' %}></script>
+<script src="{% static "/curling/ajax.js" %}"></script>
+</head>
+<body>
+
+<div data-role="page" id="page">
+  <div data-role="panel" id="myPanel" data-position="right"> 
+    <h2>Settings Panel</h2>
+    <p>I will add settings here.</p>
+    <a href="#page" data-rel="close" class="ui-btn ui-btn-inline ui-shadow ui-corner-all ui-btn-a ui-icon-delete ui-btn-icon-left">Close panel</a>
+
+    <div data-role="main" class="ui-content">
+      <a href="/curling/endsession/" class="ui-btn ui-corner-all ui-shadow ui-btn-icon-left ">End Session</a>
+    </div>
+  </div> 
+
+  <div data-role="header">
+   {% if user.is_authenticated %}
+     <a href="/curling/" class="ui-btn ui-corner-all ui-shadow ui-icon-home ui-btn-icon-left ">Home</a>
+     <h1>Welcome, {{ user.first_name }}</h1>
+     <a href="#myPanel" class="ui-btn ui-corner-all ui-shadow ui-icon-gear ui-btn-icon-left ">Settings</a>
+   {% else %}
+     <h1>Welcome, Please Sign In</h1> 
+   {% endif %} 
+  </div>
+
+  <div data-role="main" class="ui-content">
+    {% block content %}
+    {% endblock %}  
+  </div>
+
+  <div data-role="footer" data-position="fixed">
+   {% if user.is_authenticated %}
+      <a href="{% url 'logout'%}" class="ui-btn ui-corner-all ui-shadow ui-btn-icon-left">Log Out</a>
+   {% endif %} 
+    
+  </div>
+</div>
+
+</body>
+</html>

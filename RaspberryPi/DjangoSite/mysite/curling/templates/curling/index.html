@@ -1,0 +1,14 @@
+{% extends "curling/base_generic.html" %}
+
+{% block content %}
+
+<div class="btn-group-vertical">
+  <h2>Where do you want to go?</h2>
+  <button type="button" class="btn btn-primary btn-lg" onclick="  navfunction('/curling/setup/')">Setup Session</button>
+  <button type="button" class="btn btn-primary btn-lg" onclick="  navfunction('/curling/session/')">View Live Session</button>    
+  <button type="button" class="btn btn-primary btn-lg" onclick="  navfunction('/curling/analyze/')">Analyze Data</button>
+</div>
+
+
+
+{% endblock %}

@@ -1,0 +1,136 @@
+{% extends "curling/base_generic.html" %}
+
+
+{% block content %}
+
+
+<div class="container-fluid">
+  <div class="text-center">
+    <h2>Shot Info</h2>
+    <h4>View live shot information</h4>
+  </div>
+  <div class="row">
+    <div class="col-xs-6">
+      <div class="panel panel-default text-center">
+        <div class="panel-heading">
+          <h3>Person</h3>
+        </div>
+        <div class="panel-body">
+    	  {% if most_recent_shot %}
+    	  {% for Shot in most_recent_shot %}
+              {% if Shot.Person %}
+          	<h2><a href="/curling/person/{{ Shot.Person.id }}/">{{ Shot.Person }}</a></h2>
+	      {% else %}
+    	  	<h2>No Person</a></h2>
+	      {% endif %}
+    	  {% endfor %}
+	  {% else %}
+    	  	<p>No Person</p>
+	  {% endif %}
+        </div>
+      </div> 
+    </div> 
+   <div class="col-xs-6">
+      <div class="panel panel-default text-center">
+        <div class="panel-heading">
+          <h3>Rock</h3>
+        </div>
+        <div class="panel-body">
+    	  {% if most_recent_shot %}
+    	  {% for Shot in most_recent_shot %}
+            {% if Shot.Rock %}
+        	<p>{{ Shot.Rock.Sheet.Club }}</p>
+        	<h2>{{ Shot.Rock.Color }} {{ Shot.Rock.RockLocalID }}</h2>
+        	<p>Sheet {{ Shot.Rock.Sheet.SheetLocalID }}</p>
+	    {% else %}
+    		<h2><a href="#">No Rock</a></h2>
+	    {% endif %}
+    	  {% endfor %}
+	  {% else %}
+    	  	<h2>No Rock</h2>
+	  {% endif %}
+        </div>
+      </div> 
+    </div> 
+  </div>
+  <div class="row">
+    <div class="col-xs-6">
+      <div class="panel panel-default text-center">
+        <div class="panel-heading">
+          <h3>Split Time</h3>
+        </div>
+        <div class="panel-body">
+    	  {% if most_recent_shot %}	
+    	  {% for Shot in most_recent_shot %}
+              {% if Shot.TeeHogSplit %}
+                  <h1>{{ Shot.FormattedTeeHogSplit }}</h1>
+              {% else %}
+                  <h1>--</h1>
+              {% endif %}
+                  <p>seconds</p>
+    	  {% endfor %}
+	  {% else %}
+    	  	<h1>--</h1>
+	  {% endif %}
+        </div>
+      </div> 
+    </div> 
+    <div class="col-xs-6">
+      <div class="panel panel-default text-center">
+        <div class="panel-heading">
+          <h3>Velocity (m/s)</h3>
+        </div>
+        <div class="panel-body">
+    	  {% if most_recent_shot %}	
+    	  {% for Shot in most_recent_shot %}
+              {% if Shot.AvgSplitSpeed %}
+                  <p>Tee-Hog Avg: {{ Shot.AvgSplitSpeed|floatformat:3 }}</p>
+              {% else %}
+                  <p>Tee-Hog Avg: --</p>
+              {% endif %}
+
+              {% if Shot.HogSpeed %}
+                  <p>Hog: {{ Shot.HogSpeed|floatformat:3 }}</p>
+              {% else %}
+                  <p>Hog: --</p>
+              {% endif %}
+
+              {% if Shot.TeeSpeed %}
+                  <p>Tee: {{ Shot.TeeSpeed|floatformat:3 }}</p>
+              {% else %}
+                  <p>Tee-: --</p>
+              {% endif %}
+    	  {% endfor %}
+	  {% else %}
+    	  	<h3>No Data Available</h3>
+	  {% endif %}
+        </div>
+      </div> 
+    </div> 
+  </div>
+
+
+
+<form method="post" action="sessionform.asp">
+  <fieldset data-role="controlgroup" data-type="horizontal">
+    <legend>Broom input method:</legend>
+      <label for="manual">Manual</label>
+      <input type="radio" name="input" id="manual" value="manual">
+      <label for="measurement">Measurement</label>
+      <input type="radio" name="input" id="measurement" value="measurement"> 
+  </fieldset>
+
+  <label for="points">Broom Position:</label>
+  <input id="broomslider" type="text"/><br/>
+  <input type="submit" data-inline="true" value="Submit">
+</form>
+
+<script>
+("#broomslider").slider({ min: 0, max: 10, value: [0, 10], focus: true });
+</script>
+
+
+
+</div>
+
+{% endblock %}

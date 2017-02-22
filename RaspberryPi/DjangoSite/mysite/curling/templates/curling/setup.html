@@ -1,0 +1,30 @@
+{% extends "curling/base_generic.html" %}
+
+{% block content %}
+
+<div class="container">
+<div class="btn-group btn-group-justified">
+<a href="/curling/club/" class="btn btn-primary">Club</a>
+<a href="/curling/sheet/" class="btn btn-primary">Sheet</a>
+<a href="/curling/rock/" class="btn btn-primary">Rock</a>
+</div>
+</div>
+
+{% load crispy_forms_tags %}
+
+    <form method="POST">{% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" name="add_person" class="save btn btn-default">Save</button>
+    </form>
+
+
+
+    <form method="POST">{% csrf_token %}
+        {{ formRFID.as_p }}
+        <button type="submit" name="assign_rfid" class="save btn btn-default">Save</button>
+    </form>
+
+{% crispy form %}
+{% crispy formRFID %}
+
+{% endblock %}

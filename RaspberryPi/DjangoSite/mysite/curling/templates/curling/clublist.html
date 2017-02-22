@@ -1,0 +1,22 @@
+{% extends "curling/base_generic.html" %}
+
+{% block content %}
+
+  <div>
+    <h2>Club List:</h2>
+      <ul class="list-group">
+    	{% if latest_club_list %}
+    		
+    	{% for Club in latest_club_list %}
+        	<a href="/curling/club/{{ Club.id }}/" class="list-group-item list-group-item-action">{{ Club.Name }}</a>
+    	{% endfor %}
+    		
+	{% else %}
+    		<p>No clubs are available.</p>
+	{% endif %}
+    </ul>
+  </div>
+
+  <button type="button" class="btn btn-primary btn-lg" onclick="  navfunction('/curling/club/add/')">Add New Club</button>
+
+{% endblock %}
