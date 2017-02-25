@@ -1,9 +1,10 @@
 from django import forms
-from .models import Person, Session, SessionPerson, RFIDRawData, SessionRock, Rock
+from django.forms import ModelForm
+from .models import Person, Session, SessionPerson, RFIDRawData, SessionRock, Rock, Club
 from .fields import AssignRFIDChoiceField, AssignRockRFIDChoiceField
 
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Submit, HTML
+from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit, HTML
 from crispy_forms.bootstrap import FormActions
 
 gender_choice = (('male','Male',),('female','Female',))
@@ -43,7 +44,7 @@ class AssignRFIDForm(forms.Form):
         self.helper.form_id = 'id-addRFIDForm'
         self.helper.form_class = 'blueForms'
         self.helper.form_method = 'post'
-        self.helper.form_action = 'add_RFID'
+        self.helper.form_action = 'assign_rfid'
 
         self.helper.add_input(Submit('submit', 'Submit'))
 
@@ -53,14 +54,33 @@ class AddPersonForm(forms.Form):
     gender = forms.ChoiceField(widget=forms.RadioSelect, choices=gender_choice)
     hand = forms.ChoiceField(widget=forms.RadioSelect, choices=hand_choice)
 
-class AddClubForm(forms.Form):
-    club_name = forms.CharField()
-    country_field = forms.CharField(required=False)
-    address1_field = forms.CharField(required=False)
-    address2_field = forms.CharField(required=False)
-    city_field = forms.CharField(required=False)
-    state_field = forms.CharField(required=False)
-    zip_field = forms.CharField(required=False)
+class AddClubForm(forms.ModelForm):
+    #club_name = forms.CharField()
+    #country_field = forms.CharField(required=False)
+    #address1_field = forms.CharField(required=False)
+    #address2_field = forms.CharField(required=False)
+    #city_field = forms.CharField(required=False)
+    #state_field = forms.CharField(required=False)
+    #zip_field = forms.CharField(required=False)
+    class Meta:
+        model = Club
+        fields = ['Name','Country','Address1','Address2','City','State','Zip','NumberOfSheets']
+
+    def __init__(self, *args, **kwargs):
+        super(AddClubForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_id = 'id-addAddClubForm'
+        self.helper.form_class = 'blueForms'
+        self.helper.form_method = 'post'
+        self.helper.form_action = 'add_club'
+
+        self.helper.layout.append(
+            FormActions(
+                Submit('save', 'Save changes'),
+                #Button('cancel', 'Cancel')
+            )
+        )
+
 
 class AssignRockForm(forms.Form):
     #identify current session

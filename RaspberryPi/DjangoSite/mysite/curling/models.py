@@ -10,6 +10,7 @@ class Club(models.Model):
     City = models.CharField(max_length=200,null=True,blank=True)
     State = models.CharField(max_length=200,null=True,blank=True)
     Zip = models.CharField(max_length=200,null=True,blank=True)
+    NumberOfSheets = models.PositiveIntegerField(default=0)
     LastUpdated = models.DateTimeField(default=timezone.now)
     def __str__(self):
         return self.Name

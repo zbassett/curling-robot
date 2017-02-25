@@ -9,6 +9,8 @@ from .forms import AssignPersonForm, AssignRFIDForm, AddClubForm, AssignRockForm
 
 from .models import Club, Person, Session, SessionPerson, RFIDRawData, Shot, SessionRock
 from .functions import DistanceCalc
+from django.views.generic.edit import CreateView
+
 import time, datetime
 
 @login_required
@@ -22,43 +24,46 @@ def index(request):
     return render( request, template, context )
 
 @login_required
-def setup(request):
-    #if Session.objects.filter(IsClosed=0).count() == 0:
-        #s = Session(Initiated = timezone.now())
-        #s.save()
-    #else:
-	#s = Session.objects.get(IsClosed=0)
+def assignperson(request):
     s = Session.objects.get_or_create(IsClosed=0)[0]
-    #print('Regularsetup')
     s.IsSetup = 1
     s.save()
 
     if request.method == "POST":
         print(request.POST)
-        if 'add_person' in request.POST:
-            form_class = AssignPersonForm(request.POST)
-            if form_class.is_valid():
-                p = SessionPerson(Person_id=request.POST['person_to_assign'], Session_id=s.id)
-                p.save()
-            form_RFID = AssignRFIDForm
-        elif 'assign_rfid' in request.POST:
-            form_RFID = AssignRFIDForm(request.POST)
-            if form_RFID.is_valid():
-                p = SessionPerson.objects.get(pk=request.POST['person_to_assign']) 
-                p.RFID=RFIDRawData.objects.filter(id=request.POST['rfid_value']).values_list('RFIDValue',flat=True)[0]
-                p.save()
-
-                r = RFIDRawData.objects.all()
-                r.delete()
-
-            form_class = AssignPersonForm
-
-    else:
-        form_class = AssignPersonForm
+        form_class = AssignPersonForm(request.POST)
+        if form_class.is_valid():
+            p = SessionPerson(Person_id=request.POST['person_to_assign'], Session_id=s.id)
+            p.save()
         form_RFID = AssignRFIDForm
+    return setup(request)
 
-    #form_class = AssignPersonForm
-    #form_RFID = AssignRFIDForm
+@login_required
+def assignrfid(request):
+    s = Session.objects.get_or_create(IsClosed=0)[0]
+    s.IsSetup = 1
+    s.save()
+    if request.method == "POST":
+        form_RFID = AssignRFIDForm(request.POST)
+        if form_RFID.is_valid():
+            p = SessionPerson.objects.get(pk=request.POST['person_to_assign']) 
+            p.RFID=RFIDRawData.objects.filter(id=request.POST['rfid_value']).values_list('RFIDValue',flat=True)[0]
+            p.save()
+
+            r = RFIDRawData.objects.all()
+            r.delete()
+
+        form_class = AssignPersonForm
+    return setup(request)
+
+@login_required
+def setup(request):
+    s = Session.objects.get_or_create(IsClosed=0)[0]
+    s.IsSetup = 1
+    s.save()
+
+    form_class = AssignPersonForm
+    form_RFID = AssignRFIDForm
 
     template = "curling/setup.html"
     context = {'form': form_class, 'formRFID': form_RFID}
@@ -142,7 +147,7 @@ def addclub(request):
 
             latest_club_list = Club.objects.order_by('Name')
             context = {'latest_club_list': latest_club_list}
-            return redirect('/curling/club/')
+            return redirect('curling/club/')
     else:
         form_class = AddClubForm()
         context = {'form': form_class}

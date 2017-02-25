@@ -10,10 +10,15 @@ urlpatterns = [
 
     url(r'setup/rock/$', views.rocksetup, name='rocksetup'),
     url(r'setup/$', views.setup, name='setup'),
+    url(r'setup/assign_person$', views.assignperson, name='assignperson'),
+    url(r'setup/assign_rfid$', views.assignrfid, name='assignrfid'),
     url(r'endsession/$', views.endsession, name='endsession'),
     url(r'session/$', views.session, name='session'),
+
+    url(r'club/new/$', views.addclub, name='addclub'),
     url(r'club/$', views.club, name='club'),
-    url(r'club/add/$', views.addclub, name='addclub'),
+
+
     url(r'rfid/$', csrf_exempt(views.rfid), name='rfid'),
 
 
