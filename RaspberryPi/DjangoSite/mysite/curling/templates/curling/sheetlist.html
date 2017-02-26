@@ -1,0 +1,27 @@
+{% extends 'curling/base_generic.html' %}
+
+{% block content %}
+  <form method="get">
+    {{ filter.form.as_p }}
+    <button type="submit">Search</button>
+  </form>
+
+
+  <div>
+    <h2>Sheet List:</h2>
+      <ul class="list-group">
+    	{% if filter.qs %}
+    		
+    	{% for sheet in filter.qs %}
+        	<a href="/curling/sheet/{{ sheet.id }}/" class="list-group-item list-group-item-action">{{ sheet.Club.Name }} - {{ sheet.SheetLocalID }}</a>
+    	{% endfor %}
+    		
+	{% else %}
+    		<p>No sheets are available.</p>
+	{% endif %}
+    </ul>
+  </div>
+
+  <button type="button" class="btn btn-primary btn-lg" onclick="  navfunction('/curling/sheet/new/')">Add New Sheet</button>
+
+{% endblock %}

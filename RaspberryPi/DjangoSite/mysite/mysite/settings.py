@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
     #'socket_server',
     #'south',
-    #'channels',
+    'channels',
     'bootstrap3',
     'crispy_forms',
 ]

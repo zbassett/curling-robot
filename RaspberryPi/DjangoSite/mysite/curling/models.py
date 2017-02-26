@@ -23,12 +23,20 @@ class Sheet(models.Model):
         return '{} - {}'.format(self.Club, self.SheetLocalID)
 
 class Person(models.Model):
+    GENDER_CHOICES = (
+        ('M', 'Male'),
+        ('F', 'Female'),
+    )
+    HAND_CHOICES = (
+        ('L', 'Left'),
+        ('R', 'Right'),
+    )
     FirstName = models.CharField(max_length=200)
     LastName = models.CharField(max_length=200)
-    Hand = models.CharField(max_length=200,default='Hand')
+    Hand = models.CharField(max_length=1, choices=HAND_CHOICES)
     Club = models.ForeignKey(Club, on_delete=models.CASCADE)
     YearStarted = models.IntegerField(null=True)
-    Gender = models.CharField(max_length=200,null=True,blank=True)
+    Gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
     LastUpdated = models.DateTimeField(default=timezone.now)
     def __str__(self):
         return '{} {}'.format(self.FirstName, self.LastName)

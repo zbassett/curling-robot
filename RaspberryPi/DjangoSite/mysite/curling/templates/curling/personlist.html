@@ -1,0 +1,22 @@
+{% extends "curling/base_generic.html" %}
+
+{% block content %}
+
+  <div>
+    <h2>People:</h2>
+      <ul class="list-group">
+    	{% if person_list %}
+    		
+    	{% for Person in person_list %}
+        	<a href="/curling/person/{{ Person.id }}/" class="list-group-item list-group-item-action">{{ Person.FirstName }} {{ Person.LastName }}</a>
+    	{% endfor %}
+    		
+	{% else %}
+    		<p>No people are available.</p>
+	{% endif %}
+    </ul>
+  </div>
+
+  <button type="button" class="btn btn-primary btn-lg" onclick="  navfunction('/curling/person/new/')">Add New Person</button>
+
+{% endblock %}

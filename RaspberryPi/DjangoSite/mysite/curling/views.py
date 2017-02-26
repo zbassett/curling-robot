@@ -5,10 +5,11 @@ from django.views import generic
 from django.template import loader
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
-from .forms import AssignPersonForm, AssignRFIDForm, AddClubForm, AssignRockForm, AssignRockRFIDForm
+from .forms import AssignPersonForm, AssignRFIDForm, ClubForm, AssignRockRFIDForm, AssignRockRFIDForm, PersonForm, AssignSheetForm
 
 from .models import Club, Person, Session, SessionPerson, RFIDRawData, Shot, SessionRock, Sheet, Rock
 from .functions import DistanceCalc
+from .filters import SheetFilter
 from django.views.generic.edit import CreateView
 
 import time, datetime
@@ -57,6 +58,36 @@ def assignrfid(request):
     return setup(request)
 
 @login_required
+def assignrocks(request):
+    s = Session.objects.get_or_create(IsClosed=0)[0]
+    
+    if request.method == "POST":
+        print(request.POST)
+        rocks_on_sheet = Rock.objects.filter(Sheet=Sheet.objects.get(pk=request.POST['sheet_to_assign']))
+        for r in rocks_on_sheet:
+            sr = SessionRock.objects.create(Rock=r,Session=s)
+
+    return setup(request)
+
+@login_required
+def assignrockrfid(request):
+    s = Session.objects.get_or_create(IsClosed=0)[0]
+    s.IsSetup = 1
+    s.save()
+    if request.method == "POST":
+        form_RFID = AssignRockRFIDForm(request.POST)
+        if form_RFID.is_valid():
+            r = SessionRock.objects.get(pk=request.POST['rock_to_assign']) 
+            r.RFID=RFIDRawData.objects.filter(id=request.POST['rfid_value']).values_list('RFIDValue',flat=True)[0]
+            r.save()
+
+            rf = RFIDRawData.objects.all()
+            rf.delete()
+
+        #form_class = AssignRockRFIDForm
+    return setup(request)
+
+@login_required
 def setup(request):
     s = Session.objects.get_or_create(IsClosed=0)[0]
     s.IsSetup = 1
@@ -64,10 +95,14 @@ def setup(request):
 
     form_class = AssignPersonForm
     form_RFID = AssignRFIDForm
+    form_sheet = AssignSheetForm
+    form_Rock_RFID = AssignRockRFIDForm
 
     template = "curling/setup.html"
-    context = {'form': form_class, 'formRFID': form_RFID}
+    context = {'form': form_class, 'formRFID': form_RFID, 'form_sheet': form_sheet, 'form_Rock_RFID': form_Rock_RFID}
     return render( request, template, context )
+
+
 
 @login_required
 def rocksetup(request):
@@ -140,7 +175,8 @@ def club(request):
 @login_required
 def addclub(request):
     if request.method == "POST":
-        form_class = AddClubForm(request.POST)
+        print request.POST
+        form_class = ClubForm(request.POST)
         if form_class.is_valid():
             c = Club(Name=request.POST['Name'],Country=request.POST['Country'],Address1=request.POST['Address1'],Address2=request.POST['Address2'],City=request.POST['City'],State=request.POST['State'],Zip=request.POST['Zip'],NumberOfSheets=request.POST['NumberOfSheets'])
             c.save()
@@ -158,7 +194,42 @@ def addclub(request):
             context = {'latest_club_list': latest_club_list}
             return redirect('curling/club/')
     else:
-        form_class = AddClubForm()
+        form_class = ClubForm()
+        context = {'form': form_class}
+        return render(request, 'curling/addclub.html', context)
+
+@login_required
+def editclub(request,club_id):
+    print "edit club"
+    if request.method == "POST":
+        print request.POST
+        form_class = ClubForm(request.POST)
+        if form_class.is_valid():
+            c = Club.objects.get(pk=club_id)
+            c.Name=request.POST['Name']
+            c.Country=request.POST['Country']
+            c.Address1=request.POST['Address1']
+            c.Address2=request.POST['Address2']
+            c.City=request.POST['City']
+            c.State=request.POST['State']
+            c.Zip=request.POST['Zip']
+            c.NumberOfSheets=request.POST['NumberOfSheets']
+            c.save()
+
+            #create sheet objects for the new club
+            #if c.NumberOfSheets > 0:
+                #for x in range(1, int(c.NumberOfSheets)+1):
+                    #s = Sheet.objects.create(Club=c,SheetLocalID=x)
+                    #add rocks to sheet
+                    #for y in range (1, 8):
+                        #r = Rock.objects.create(Sheet=s,RockLocalID=y,Color='red')
+                        #r = Rock.objects.create(Sheet=s,RockLocalID=y,Color='yellow')
+
+            latest_club_list = Club.objects.order_by('Name')
+            context = {'latest_club_list': latest_club_list}
+            return redirect('curling/club/')
+    else:
+        form_class = ClubForm()
         context = {'form': form_class}
         return render(request, 'curling/addclub.html', context)
 
@@ -166,26 +237,73 @@ def addclub(request):
 def clubdetail(request, club_id):
     model = get_object_or_404(Club.objects, pk = club_id)
     template_name = 'curling/clubdetail.html'
-    context = {"model": model}
+    form = ClubForm(instance=model)
+    context = {'model': model,'form': form}
     return render( request, template_name, context )
 
-def assignperson(request, person_id):
+
+
+@login_required
+def person(request):
+    person_list = Person.objects.order_by('FirstName')
+    context = {'person_list': person_list}
+    return render(request, 'curling/personlist.html', context)
+
+@login_required
+def persondetail(request, person_id):
     model = get_object_or_404(Person.objects, pk = person_id)
-    try:
-	selected_person = Person.choice_set.get(pk=request.POST('choice'))
-    except (KeyError, Person.DoesNotExist):
-        # Redisplay the question voting form.
-        # Redisplay the question voting form.
-    	unused_person_list = Person.objects.order_by('FirstName')
-    	template = "curling/setup.html"
-    	context = {'unused_person_list': unused_person_list}
-    	return render( request, template, context )
+    template_name = 'curling/persondetail.html'
+    form = PersonForm(instance=model)
+    context = {'model': model,'form': form}
+    return render( request, template_name, context )
+
+@login_required
+def addperson(request):
+    if request.method == "POST":
+        print request.POST
+        form_class = PersonForm(request.POST)
+        if form_class.is_valid():
+            p = Person(FirstName=request.POST['FirstName'],LastName=request.POST['LastName'],Hand=request.POST['Hand'],Club=Club.objects.get(pk=request.POST['Club']),YearStarted=request.POST['YearStarted'],Gender=request.POST['Gender'])
+            p.save()
+
+            person_list = Person.objects.order_by('FirstName')
+            context = {'person_list': person_list}
+            return redirect('curling/person/')
     else:
-        selected_choice.save()
-        # Always return an HttpResponseRedirect after successfully dealing
-        # with POST data. This prevents data from being posted twice if a
-        # user hits the Back button.
-        return HttpResponseRedirect(reverse('polls:results', args=(question.id,)))
+        form_class = PersonForm()
+        context = {'form': form_class}
+        return render(request, 'curling/addperson.html', context)
+
+@login_required
+def editperson(request,person_id):
+    if request.method == "POST":
+        print request.POST
+        form_class = PersonForm(request.POST)
+        if form_class.is_valid():
+            p = Person.objects.get(pk=person_id)
+            p.FirstName=request.POST['FirstName']
+            p.LastName=request.POST['LastName']
+            p.Hand=request.POST['Hand']
+            p.Club=Club.objects.get(pk=request.POST['Club'])
+            p.YearStarted=request.POST['YearStarted']
+            p.Gender=request.POST['Gender']
+
+            p.save()
+
+            person_list = Club.objects.order_by('Person')
+            context = {'person_list': person_list}
+            return redirect('curling/person/')
+    else:
+        form_class = PersonForm()
+        context = {'form': form_class}
+        return render(request, 'curling/addperson.html', context)
+
+
+@login_required
+def sheet(request):
+    sheet_list = Sheet.objects.all()
+    sheet_filter = SheetFilter(request.GET, queryset=sheet_list)
+    return render(request, 'curling/sheetlist.html', {'filter': sheet_filter})
 
 def rfid(request):
     unparsed_value = request.POST.get('payloadvalue')
