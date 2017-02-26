@@ -72,7 +72,7 @@ class AddClubForm(forms.ModelForm):
         self.helper.form_id = 'id-addAddClubForm'
         self.helper.form_class = 'blueForms'
         self.helper.form_method = 'post'
-        self.helper.form_action = 'add_club'
+        self.helper.form_action = 'add_club/'
 
         self.helper.layout.append(
             FormActions(

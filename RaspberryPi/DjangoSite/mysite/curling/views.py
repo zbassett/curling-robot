@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from .forms import AssignPersonForm, AssignRFIDForm, AddClubForm, AssignRockForm, AssignRockRFIDForm
 
-from .models import Club, Person, Session, SessionPerson, RFIDRawData, Shot, SessionRock
+from .models import Club, Person, Session, SessionPerson, RFIDRawData, Shot, SessionRock, Sheet, Rock
 from .functions import DistanceCalc
 from django.views.generic.edit import CreateView
 
@@ -142,8 +142,17 @@ def addclub(request):
     if request.method == "POST":
         form_class = AddClubForm(request.POST)
         if form_class.is_valid():
-            c = Club(Name=request.POST['club_name'],Country=request.POST['country_field'],Address1=request.POST['address1_field'],Address2=request.POST['address2_field'],City=request.POST['city_field'],State=request.POST['state_field'],Zip=request.POST['zip_field'])
+            c = Club(Name=request.POST['Name'],Country=request.POST['Country'],Address1=request.POST['Address1'],Address2=request.POST['Address2'],City=request.POST['City'],State=request.POST['State'],Zip=request.POST['Zip'],NumberOfSheets=request.POST['NumberOfSheets'])
             c.save()
+
+            #create sheet objects for the new club
+            if c.NumberOfSheets > 0:
+                for x in range(1, int(c.NumberOfSheets)+1):
+                    s = Sheet.objects.create(Club=c,SheetLocalID=x)
+                    #add rocks to sheet
+                    for y in range (1, 8):
+                        r = Rock.objects.create(Sheet=s,RockLocalID=y,Color='red')
+                        r = Rock.objects.create(Sheet=s,RockLocalID=y,Color='yellow')
 
             latest_club_list = Club.objects.order_by('Name')
             context = {'latest_club_list': latest_club_list}

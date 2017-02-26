@@ -15,6 +15,7 @@ urlpatterns = [
     url(r'endsession/$', views.endsession, name='endsession'),
     url(r'session/$', views.session, name='session'),
 
+    url(r'club/new/add_club/$', views.addclub, name='addclub'),
     url(r'club/new/$', views.addclub, name='addclub'),
     url(r'club/$', views.club, name='club'),
 
