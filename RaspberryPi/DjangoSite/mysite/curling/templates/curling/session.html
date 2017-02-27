@@ -19,9 +19,9 @@
     	  {% if most_recent_shot %}
     	  {% for Shot in most_recent_shot %}
               {% if Shot.Person %}
-          	<h2><a href="/curling/person/{{ Shot.Person.id }}/">{{ Shot.Person }}</a></h2>
+          	<h2 id="personfield"><a href="/curling/person/{{ Shot.Person.id }}/">{{ Shot.Person }}</a></h2>
 	      {% else %}
-    	  	<h2>No Person</a></h2>
+    	  	<h2 id="personfield">No Person</a></h2>
 	      {% endif %}
     	  {% endfor %}
 	  {% else %}
@@ -110,24 +110,18 @@
   </div>
 
 
-
-<form method="post" action="sessionform.asp">
-  <fieldset data-role="controlgroup" data-type="horizontal">
-    <legend>Broom input method:</legend>
-      <label for="manual">Manual</label>
-      <input type="radio" name="input" id="manual" value="manual">
-      <label for="measurement">Measurement</label>
-      <input type="radio" name="input" id="measurement" value="measurement"> 
-  </fieldset>
-
-  <label for="points">Broom Position:</label>
-  <input id="broomslider" type="text"/><br/>
-  <input type="submit" data-inline="true" value="Submit">
-</form>
-
 <script>
-("#broomslider").slider({ min: 0, max: 10, value: [0, 10], focus: true });
+socket = new WebSocket("ws://" + window.location.host + "/chat/");
+socket.onmessage = function(e) {
+    document.getElementById("personfield").innerHTML = e.data;
+}
+socket.onopen = function() {
+    socket.send("hello world");
+}
+// Call onopen directly if socket is already open
+if (socket.readyState == WebSocket.OPEN) socket.onopen();
 </script>
+
 
 
 

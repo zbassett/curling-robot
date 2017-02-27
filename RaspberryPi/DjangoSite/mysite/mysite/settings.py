@@ -58,6 +58,16 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "asgi_redis.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("localhost", 6379)],
+        },
+        "ROUTING": "curling.routing.channel_routing",
+    },
+}
+
 ROOT_URLCONF = 'mysite.urls'
 
 TEMPLATES = [
