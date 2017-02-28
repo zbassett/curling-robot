@@ -5,7 +5,7 @@ from .fields import AssignRFIDChoiceField, AssignRockRFIDChoiceField
 from .filters import RockFilter
 
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit, HTML
+from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit, HTML, Field
 from crispy_forms.bootstrap import FormActions
 
 gender_choice = (('male','Male',),('female','Female',))
@@ -46,8 +46,12 @@ class AssignRFIDForm(forms.Form):
         self.helper.form_class = 'blueForms'
         self.helper.form_method = 'post'
         self.helper.form_action = 'assign_rfid/'
-
+        self.helper.layout = Layout(
+            Field('person_to_assign'),
+            Field('rfid_value', css_class='rfidfield')
+        )
         self.helper.add_input(Submit('submit', 'Submit'))
+
 
 class PersonForm(forms.ModelForm):
     class Meta:
@@ -117,5 +121,9 @@ class AssignRockRFIDForm(forms.Form):
         self.helper.form_class = 'blueForms'
         self.helper.form_method = 'post'
         self.helper.form_action = 'assign_rock_rfid/'
+        self.helper.layout = Layout(
+            Field('rock_to_assign'),
+            Field('rfid_value', css_class='rfidfield')
+        )
 
         self.helper.add_input(Submit('submit', 'Submit'))

@@ -11,6 +11,9 @@ from .models import Club, Person, Session, SessionPerson, RFIDRawData, Shot, Ses
 from .functions import DistanceCalc
 from .filters import SheetFilter
 from django.views.generic.edit import CreateView
+from channels import Group
+from django.core import serializers
+
 
 import time, datetime
 
@@ -99,7 +102,7 @@ def setup(request):
     form_Rock_RFID = AssignRockRFIDForm
 
     template = "curling/setup.html"
-    context = {'form': form_class, 'formRFID': form_RFID, 'form_sheet': form_sheet, 'form_Rock_RFID': form_Rock_RFID}
+    context = {'form': form_class, 'formRFID': form_RFID, 'form_sheet': form_sheet, 'form_Rock_RFID': form_Rock_RFID, 'Session': s}
     return render( request, template, context )
 
 
@@ -309,17 +312,36 @@ def rfid(request):
     unparsed_value = request.POST.get('payloadvalue')
     origin_node = unparsed_value[-1:]
     rfid_value = unparsed_value[4:-2]
-    print(rfid_value)
+    #print(rfid_value)
     r = RFIDRawData(RFIDValue=rfid_value,SourceNode=origin_node)
     r.save()
+
+
+    try:
+        s = Session.objects.get(IsClosed=0,IsSetup=1)
+        groupname = 'setup%d' % s.id
+        data = serializers.serialize('json',[r])
+        print data
+        Group(groupname).send({
+            "text": data,
+        })
+    except Session.DoesNotExist:
+        print("NoSetupSessions")
     
+
     try:
         s = Session.objects.get(IsClosed=0,IsSetup=0)
+        #groupname = 'session%d' % s.id
+        #Group(groupname).send({
+        #    "text": rfid_value,
+        #})
         try:
             p = SessionPerson.objects.get(Session=s.id,RFID=rfid_value)
             sh, created = Shot.objects.get_or_create(IsComplete=0,Session_id=s.id,HasReceivedData=0)
             sh.Person_id=p.Person_id
             sh.save()
+
+
 
             r = Shot.objects.exclude(pk=sh.id)
             r.update(IsComplete = 1)

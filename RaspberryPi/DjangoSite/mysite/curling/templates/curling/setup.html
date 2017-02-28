@@ -19,4 +19,31 @@
 {% crispy form_sheet form_sheet.helper %}
 {% crispy form_Rock_RFID form_Rock_RFID.helper %}
 
+<script>
+socket = new WebSocket("ws://" + window.location.host + "/setup{{ Session.id }}/");
+socket.onmessage = function(e) {
+    //alert(e.data);
+    var result = e.data.slice(1, -1);
+    obj = JSON.parse(result)
+    //alert(obj.fields.RFIDValue)
+    
+    var arr = document.getElementsByClassName("rfidfield");
+
+
+    for(var i = 0; i < arr.length; i++)
+    {
+        var option = document.createElement("option");
+        option.text = obj.fields.RFIDValue;
+        option.value = obj.pk;
+        arr.item(i).add(option);
+    }
+    
+}
+socket.onopen = function() {
+    socket.send("hello world");
+}
+// Call onopen directly if socket is already open
+if (socket.readyState == WebSocket.OPEN) socket.onopen();
+</script>
+
 {% endblock %}

@@ -1,9 +1,11 @@
 from channels import Group
+from channels.sessions import channel_session
 
 # Connected to websocket.connect
 def ws_add(message):
+    label = message['path'].strip('/').split('/')
     message.reply_channel.send({"accept": True})
-    Group("chat").add(message.reply_channel)
+    Group(message['path'].strip('/')).add(message.reply_channel)
 
 # Connected to websocket.receive
 def ws_message(message):
