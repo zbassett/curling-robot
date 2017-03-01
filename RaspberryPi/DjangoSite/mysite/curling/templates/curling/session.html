@@ -15,7 +15,7 @@
         <div class="panel-heading">
           <h3>Person</h3>
         </div>
-        <div class="panel-body">
+        <div id="person-body" class="panel-body">
     	  {% if most_recent_shot %}
     	  {% for Shot in most_recent_shot %}
               {% if Shot.Person %}
@@ -111,9 +111,18 @@
 
 
 <script>
-socket = new WebSocket("ws://" + window.location.host + "/chat/");
+socket = new WebSocket("ws://" + window.location.host + "/session{{ Session.id }}/");
 socket.onmessage = function(e) {
-    document.getElementById("personfield").innerHTML = e.data;
+    //alert(e.data);
+    var result = e.data.slice(1, -1);
+    obj = JSON.parse(result)
+    //alert(obj.fields.RFIDValue)
+    
+    document.getElementById("personfield").innerHTML = "test" ;
+
+    $(document.getElementById("person-body")).highlight();
+
+    
 }
 socket.onopen = function() {
     socket.send("hello world");

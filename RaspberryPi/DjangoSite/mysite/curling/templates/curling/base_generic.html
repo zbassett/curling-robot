@@ -18,12 +18,63 @@
     .btn-group {
         margin-bottom: 10px;
     }
+@-webkit-keyframes highlight-fade {
+    0% {
+        background: orange;
+    }
+    100% {
+        background: white;
+    }
+}
+@-moz-keyframes highlight-fade {
+    0% {
+        background: orange;
+    }
+    100% {
+        background: white;
+    }
+}
+@-ms-keyframes highlight-fade {
+    0% {
+        background: orange;
+    }
+    100% {
+        background: white;
+    }
+}
+@keyframes highlight-fade {
+    0% {
+        background: orange;
+    }
+    100% {
+        background: white;
+    }
+}
+.highlight {
+    -webkit-animation: highlight-fade 3s ease-out;
+    -moz-animation: highlight-fade 3s ease-out;
+    -o-animation: highlight-fade 3s ease-out;
+    animation: highlight-fade 3s ease-out;
+}
+
+.highlight * {
+    background: none !important;
+}
   </style>
   <script>
   function navfunction(route)
   {
        location.href = route;
   } 
+  jQuery.fn.highlight = function() {
+    $(this).each(function() {
+        var $this = $(this);
+        $this.addClass('highlight');
+        setTimeout(function() {
+            $this.removeClass('highlight');
+        }, 3000);
+    });
+  }
 </script>
 </head>
 <body>

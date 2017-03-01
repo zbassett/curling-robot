@@ -40,7 +40,7 @@ def assignperson(request):
             p = SessionPerson(Person_id=request.POST['person_to_assign'], Session_id=s.id)
             p.save()
         form_RFID = AssignRFIDForm
-    return setup(request)
+    return HttpResponseRedirect('/curling/setup/')
 
 @login_required
 def assignrfid(request):
@@ -58,7 +58,7 @@ def assignrfid(request):
             r.delete()
 
         form_class = AssignPersonForm
-    return setup(request)
+    return HttpResponseRedirect('/curling/setup/')
 
 @login_required
 def assignrocks(request):
@@ -70,7 +70,7 @@ def assignrocks(request):
         for r in rocks_on_sheet:
             sr = SessionRock.objects.create(Rock=r,Session=s)
 
-    return setup(request)
+    return HttpResponseRedirect('/curling/setup/')
 
 @login_required
 def assignrockrfid(request):
@@ -88,7 +88,7 @@ def assignrockrfid(request):
             rf.delete()
 
         #form_class = AssignRockRFIDForm
-    return setup(request)
+    return HttpResponseRedirect('/curling/setup/')
 
 @login_required
 def setup(request):
@@ -159,7 +159,7 @@ def session(request):
 
 
     template = "curling/session.html"
-    context = {'most_recent_shot': most_recent_shot}
+    context = {'most_recent_shot': most_recent_shot, 'Session': s}
     return render( request, template, context )
 
 @login_required
@@ -230,7 +230,7 @@ def editclub(request,club_id):
 
             latest_club_list = Club.objects.order_by('Name')
             context = {'latest_club_list': latest_club_list}
-            return redirect('curling/club/')
+            return HttpResponseRedirect('/curling/club/')
     else:
         form_class = ClubForm()
         context = {'form': form_class}
@@ -320,7 +320,7 @@ def rfid(request):
     try:
         s = Session.objects.get(IsClosed=0,IsSetup=1)
         groupname = 'setup%d' % s.id
-        data = serializers.serialize('json',[r])
+        data = serializers.serialize('json',[r], relations=('Person',))
         print data
         Group(groupname).send({
             "text": data,
@@ -331,17 +331,19 @@ def rfid(request):
 
     try:
         s = Session.objects.get(IsClosed=0,IsSetup=0)
-        #groupname = 'session%d' % s.id
-        #Group(groupname).send({
-        #    "text": rfid_value,
-        #})
+        
         try:
             p = SessionPerson.objects.get(Session=s.id,RFID=rfid_value)
             sh, created = Shot.objects.get_or_create(IsComplete=0,Session_id=s.id,HasReceivedData=0)
             sh.Person_id=p.Person_id
             sh.save()
-
-
+            
+            groupname = 'session%d' % s.id
+            data = serializers.serialize('json',[sh.Person])
+            print data
+            Group(groupname).send({
+                "text": data,
+            })
 
             r = Shot.objects.exclude(pk=sh.id)
             r.update(IsComplete = 1)

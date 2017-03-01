@@ -1,3 +1,5 @@
+from django.core import serializers
+
 def DistanceCalc(PingTime,Temp,Humidity):
 	#Speed of sound (m/s)
 	SoS = 331.4 + (0.606 * float(Temp)) + (0.0124 * float(Humidity))
@@ -7,4 +9,8 @@ def DistanceCalc(PingTime,Temp,Humidity):
 	distance = SoS * one_way_time
 
 	return distance
+
+
+
+
 

@@ -36,6 +36,7 @@ socket.onmessage = function(e) {
         option.text = obj.fields.RFIDValue;
         option.value = obj.pk;
         arr.item(i).add(option);
+        $(arr.item(i)).highlight();
     }
     
 }
