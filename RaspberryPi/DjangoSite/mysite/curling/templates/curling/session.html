@@ -25,7 +25,7 @@
 	      {% endif %}
     	  {% endfor %}
 	  {% else %}
-    	  	<p>No Person</p>
+    	  	<h2 id="personfield">No Person</a></h2>
 	  {% endif %}
         </div>
       </div> 
@@ -35,15 +35,17 @@
         <div class="panel-heading">
           <h3>Rock</h3>
         </div>
-        <div class="panel-body">
+        <div id="rock-body" class="panel-body">
     	  {% if most_recent_shot %}
     	  {% for Shot in most_recent_shot %}
             {% if Shot.Rock %}
-        	<p>{{ Shot.Rock.Sheet.Club }}</p>
-        	<h2>{{ Shot.Rock.Color }} {{ Shot.Rock.RockLocalID }}</h2>
-        	<p>Sheet {{ Shot.Rock.Sheet.SheetLocalID }}</p>
+        	<p id="clubnamefield">{{ Shot.Rock.Sheet.Club }}</p>
+        	<h2 id="rocklabelfield">{{ Shot.Rock.Color }} {{ Shot.Rock.RockLocalID }}</h2>
+        	<p id="sheetlabelfield">Sheet {{ Shot.Rock.Sheet.SheetLocalID }}</p>
 	    {% else %}
-    		<h2><a href="#">No Rock</a></h2>
+        	<p id="clubnamefield">--</p>
+    		<h2 id="rocklabelfield">No Rock</a></h2>
+        	<p id="sheetlabelfield">--</p>
 	    {% endif %}
     	  {% endfor %}
 	  {% else %}
@@ -59,18 +61,18 @@
         <div class="panel-heading">
           <h3>Split Time</h3>
         </div>
-        <div class="panel-body">
+        <div id="split-time-body" class="panel-body">
     	  {% if most_recent_shot %}	
     	  {% for Shot in most_recent_shot %}
               {% if Shot.TeeHogSplit %}
-                  <h1>{{ Shot.FormattedTeeHogSplit }}</h1>
+                  <h1 id="splittimefield">{{ Shot.FormattedTeeHogSplit }}</h1>
               {% else %}
-                  <h1>--</h1>
+                  <h1 id="splittimefield">--</h1>
               {% endif %}
                   <p>seconds</p>
     	  {% endfor %}
 	  {% else %}
-    	  	<h1>--</h1>
+    	  	<h1 id="splittimefield">--</h1>
 	  {% endif %}
         </div>
       </div> 
@@ -80,25 +82,25 @@
         <div class="panel-heading">
           <h3>Velocity (m/s)</h3>
         </div>
-        <div class="panel-body">
+        <div id="velocity-body" class="panel-body">
     	  {% if most_recent_shot %}	
     	  {% for Shot in most_recent_shot %}
               {% if Shot.AvgSplitSpeed %}
-                  <p>Tee-Hog Avg: {{ Shot.AvgSplitSpeed|floatformat:3 }}</p>
+                  <p id="velocityavg">Tee-Hog Avg: {{ Shot.AvgSplitSpeed|floatformat:3 }}</p>
               {% else %}
-                  <p>Tee-Hog Avg: --</p>
+                  <p id="velocityavg">Tee-Hog Avg: --</p>
               {% endif %}
 
               {% if Shot.HogSpeed %}
-                  <p>Hog: {{ Shot.HogSpeed|floatformat:3 }}</p>
+                  <p id="velocityhog">Hog: {{ Shot.HogSpeed|floatformat:3 }}</p>
               {% else %}
-                  <p>Hog: --</p>
+                  <p id="velocityhog">Hog: --</p>
               {% endif %}
 
               {% if Shot.TeeSpeed %}
-                  <p>Tee: {{ Shot.TeeSpeed|floatformat:3 }}</p>
+                  <p id="velocitytee">Tee: {{ Shot.TeeSpeed|floatformat:3 }}</p>
               {% else %}
-                  <p>Tee-: --</p>
+                  <p id="velocitytee">Tee-: --</p>
               {% endif %}
     	  {% endfor %}
 	  {% else %}
@@ -113,15 +115,43 @@
 <script>
 socket = new WebSocket("ws://" + window.location.host + "/session{{ Session.id }}/");
 socket.onmessage = function(e) {
-    //alert(e.data);
     var result = e.data.slice(1, -1);
     obj = JSON.parse(result)
     //alert(obj.fields.RFIDValue)
     
-    document.getElementById("personfield").innerHTML = "test" ;
+    if (obj.fields.PersonName == null) {
+      document.getElementById("personfield").innerHTML = "No Person"
+    } else if (document.getElementById("personfield").innerHTML !== obj.fields.PersonName) {
+      document.getElementById("personfield").innerHTML = obj.fields.PersonName
+      $(document.getElementById("person-body")).highlight()
+    }
 
-    $(document.getElementById("person-body")).highlight();
+    if (obj.fields.RockLabel == null) {
+      document.getElementById("rocklabelfield").innerHTML = "No Rock"
+    } else if (document.getElementById("rocklabelfield").innerHTML !== obj.fields.RockLabel) {
+      document.getElementById("rocklabelfield").innerHTML = obj.fields.RockLabel
+      document.getElementById("clubnamefield").innerHTML = obj.fields.ClubName
+      document.getElementById("sheetlabelfield").innerHTML = obj.fields.SheetLabel
+      $(document.getElementById("rock-body")).highlight()
+    }
 
+    if (obj.fields.TeeHogSplit == null) {
+      document.getElementById("splittimefield").innerHTML = "--"
+      document.getElementById("velocityavg").innerHTML = "Tee-Hog Avg: --"
+      document.getElementById("velocityhog").innerHTML = "Hog: --"
+      document.getElementById("velocitytee").innerHTML = "Tee: --"
+    } else {
+        var formattedsplittime = obj.fields.TeeHogSplit / 1000
+        formattedsplittime = formattedsplittime.toFixed(2)
+        if (document.getElementById("splittimefield").innerHTML !== formattedsplittime) {
+          document.getElementById("splittimefield").innerHTML = formattedsplittime
+          document.getElementById("velocityavg").innerHTML = ("Tee-Hog Avg: " + obj.fields.AvgSplitSpeed)
+          document.getElementById("velocityhog").innerHTML = ("Hog: " + obj.fields.HogSpeed)
+          document.getElementById("velocitytee").innerHTML = ("Tee: " + obj.fields.TeeSpeed)
+          $(document.getElementById("split-time-body")).highlight()
+          $(document.getElementById("velocity-body")).highlight()
+        }
+    }
     
 }
 socket.onopen = function() {

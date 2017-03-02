@@ -13,6 +13,7 @@ from .filters import SheetFilter
 from django.views.generic.edit import CreateView
 from channels import Group
 from django.core import serializers
+import simplejson as json
 
 
 import time, datetime
@@ -320,7 +321,7 @@ def rfid(request):
     try:
         s = Session.objects.get(IsClosed=0,IsSetup=1)
         groupname = 'setup%d' % s.id
-        data = serializers.serialize('json',[r], relations=('Person',))
+        data = serializers.serialize('json',[r])
         print data
         Group(groupname).send({
             "text": data,
@@ -339,10 +340,24 @@ def rfid(request):
             sh.save()
             
             groupname = 'session%d' % s.id
-            data = serializers.serialize('json',[sh.Person])
-            print data
+            obj_pre = serializers.serialize("json", [sh])
+            obj = json.loads(obj_pre)
+            if sh.Person:
+                obj[0]['fields']['PersonName'] = "%s %s" % (sh.Person.FirstName, sh.Person.LastName)
+            else:
+                obj[0]['fields']['PersonName'] = None
+
+            if sh.Rock:
+                obj[0]['fields']['ClubName'] = "%s" % (sh.Rock.Sheet.Club.Name)
+                obj[0]['fields']['RockLabel'] = "%s %s" % (sh.Rock.Color, sh.Rock.RockLocalID)
+                obj[0]['fields']['SheetLabel'] = "Sheet %s" % (sh.Rock.Sheet.SheetLocalID)
+            else:
+                obj[0]['fields']['ClubName'] = None
+                obj[0]['fields']['RockLabel'] = None
+                obj[0]['fields']['SheetLabel'] = None
+            print obj
             Group(groupname).send({
-                "text": data,
+                "text": json.dumps(obj),
             })
 
             r = Shot.objects.exclude(pk=sh.id)
@@ -357,6 +372,27 @@ def rfid(request):
             sh, created = Shot.objects.get_or_create(IsComplete=0,Session_id=s.id,HasReceivedData=0)
             sh.Rock_id=r.Rock_id
             sh.save()
+
+            groupname = 'session%d' % s.id
+            obj_pre = serializers.serialize("json", [sh])
+            obj = json.loads(obj_pre)
+            if sh.Person:
+                obj[0]['fields']['PersonName'] = "%s %s" % (sh.Person.FirstName, sh.Person.LastName)
+            else:
+                obj[0]['fields']['PersonName'] = None
+
+            if sh.Rock:
+                obj[0]['fields']['ClubName'] = "%s" % (sh.Rock.Sheet.Club.Name)
+                obj[0]['fields']['RockLabel'] = "%s %s" % (sh.Rock.Color, sh.Rock.RockLocalID)
+                obj[0]['fields']['SheetLabel'] = "Sheet %s" % (sh.Rock.Sheet.SheetLocalID)
+            else:
+                obj[0]['fields']['ClubName'] = None
+                obj[0]['fields']['RockLabel'] = None
+                obj[0]['fields']['SheetLabel'] = None
+            print obj
+            Group(groupname).send({
+                "text": json.dumps(obj),
+            })
 
             r = Shot.objects.exclude(pk=sh.id)
             r.update(IsComplete = 1)
@@ -415,6 +451,26 @@ def shot1(request):
 
 
     sh.save()
+
+    groupname = 'session%d' % s.id
+    obj_pre = serializers.serialize("json", [sh])
+    obj = json.loads(obj_pre)
+    if sh.Person:
+        obj[0]['fields']['PersonName'] = "%s %s" % (sh.Person.FirstName, sh.Person.LastName)
+    else:
+        obj[0]['fields']['PersonName'] = None
+    if sh.Rock:
+        obj[0]['fields']['ClubName'] = "%s" % (sh.Rock.Sheet.Club.Name)
+        obj[0]['fields']['RockLabel'] = "%s %s" % (sh.Rock.Color, sh.Rock.RockLocalID)
+        obj[0]['fields']['SheetLabel'] = "Sheet %s" % (sh.Rock.Sheet.SheetLocalID)
+    else:
+        obj[0]['fields']['ClubName'] = None
+        obj[0]['fields']['RockLabel'] = None
+        obj[0]['fields']['SheetLabel'] = None
+    print obj
+    Group(groupname).send({
+        "text": json.dumps(obj),
+    })
 
     return  HttpResponse(unparsed_value)
 

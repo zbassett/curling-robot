@@ -42,7 +42,6 @@ class Person(models.Model):
         return '{} {}'.format(self.FirstName, self.LastName)
 
 class Rock(models.Model):
-    #Club = models.ForeignKey(Club, on_delete=models.CASCADE,default=1)
     Sheet = models.ForeignKey(Sheet, on_delete=models.CASCADE)
     RockLocalID = models.CharField(max_length=200)
     Color = models.CharField(max_length=200)
