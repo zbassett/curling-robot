@@ -145,9 +145,9 @@ socket.onmessage = function(e) {
         formattedsplittime = formattedsplittime.toFixed(2)
         if (document.getElementById("splittimefield").innerHTML !== formattedsplittime) {
           document.getElementById("splittimefield").innerHTML = formattedsplittime
-          document.getElementById("velocityavg").innerHTML = ("Tee-Hog Avg: " + obj.fields.AvgSplitSpeed)
-          document.getElementById("velocityhog").innerHTML = ("Hog: " + obj.fields.HogSpeed)
-          document.getElementById("velocitytee").innerHTML = ("Tee: " + obj.fields.TeeSpeed)
+          document.getElementById("velocityavg").innerHTML = ("Tee-Hog Avg: " + obj.fields.AvgSplitSpeed.toFixed(3))
+          document.getElementById("velocityhog").innerHTML = ("Hog: " + obj.fields.HogSpeed.toFixed(3))
+          document.getElementById("velocitytee").innerHTML = ("Tee: " + obj.fields.TeeSpeed.toFixed(3))
           $(document.getElementById("split-time-body")).highlight()
           $(document.getElementById("velocity-body")).highlight()
         }

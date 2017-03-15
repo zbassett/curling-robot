@@ -169,6 +169,7 @@ def endsession(request):
     s = Session.objects.all()
     #print('ROCKsetup')
     s.update(IsClosed = 1)
+    return HttpResponseRedirect('/curling/')
 
 @login_required
 def club(request):
@@ -440,14 +441,16 @@ def shot1(request):
 
     if sh.Rock:
     	rock_diameter = sh.Rock.Diameter
+        sheet_width = sh.Rock.Sheet.Width
     else:
-    	rock_diameter = 292.1  #using a default value of 11.5" (292.1mm)
+    	rock_diameter = Rock._meta.get_field('Diameter').default #292.1  #using a default value of 11.5" (292.1mm)
+        sheet_width = Sheet._meta.get_field('Width').default
 
     sh.HogSpeed = float(rock_diameter) / float(sh.HogTripDuration)
     sh.TeeSpeed = float(rock_diameter) / float(sh.TeeTripDuration)
     sh.AvgSplitSpeed = float(6.4008) / (float(sh.TeeHogSplit)/1000)  #tee-hog = 21 feet = 6.4008 meters
-    sh.TeeDistance = DistanceCalc(sh.TeePingTime,sh.TempC,sh.Humidity)
-    sh.HogDistance1 = DistanceCalc(sh.HogPingTime1,sh.TempC,sh.Humidity)
+    sh.TeeDistance = DistanceCalc(sh.TeePingTime,sh.TempC,sh.Humidity) - (sheet_width/100) / 2 + (rock_diameter/100) / 2  #returns position left (negative) or right (positive) of center line
+    sh.HogDistance1 = DistanceCalc(sh.HogPingTime1,sh.TempC,sh.Humidity) - (sheet_width/100) / 2 + (rock_diameter/100) / 2 
 
 
     sh.save()
@@ -480,8 +483,15 @@ def shot2(request):
     s = Session.objects.get(IsClosed=0,IsSetup=0)
     sh = Shot.objects.get(IsComplete=0,Session_id=s.id)
 
+    if sh.Rock:
+    	rock_diameter = sh.Rock.Diameter
+        sheet_width = sh.Rock.Sheet.Width
+    else:
+    	rock_diameter = Rock._meta.get_field('Diameter').default #292.1  #using a default value of 11.5" (292.1mm)
+        sheet_width = Sheet._meta.get_field('Width').default
+
     sh.HogPingTime2 = unparsed_value  # no need to do any parsing since this is the only value in this transmission.
-    sh.HogDistance2 = DistanceCalc(sh.HogPingTime2,sh.TempC,sh.Humidity)
+    sh.HogDistance2 = DistanceCalc(sh.HogPingTime2,sh.TempC,sh.Humidity) - (sheet_width/100) / 2 + (rock_diameter/100) / 2 
     sh.save()
 
     return  HttpResponse(unparsed_value)
