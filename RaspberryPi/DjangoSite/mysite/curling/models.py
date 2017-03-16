@@ -78,7 +78,7 @@ class Shot(models.Model):
     HogDistance1 = models.FloatField(null=True)
     HogDistance2 = models.FloatField(null=True)
     BroomPingTime = models.IntegerField(null=True)
-    BroomDistance = models.FloatField(null=True)
+    BroomDistance = models.FloatField(default=0)
     BroomInputMethod = models.FloatField(max_length=200,null=True,blank=True)
     IsComplete = models.BooleanField(default=0)
     HasReceivedData = models.BooleanField(default=0)
