@@ -315,8 +315,8 @@ def rfid(request):
     origin_node = unparsed_value[-1:]
     rfid_value = unparsed_value[4:-2]
     #print(rfid_value)
-    rfid_qs = RFIDRawData(RFIDValue=rfid_value,SourceNode=origin_node)
-    rfid_qs.save()
+    r = RFIDRawData(RFIDValue=rfid_value,SourceNode=origin_node)
+    r.save()
 
 
     try:
@@ -363,9 +363,6 @@ def rfid(request):
 
             r = Shot.objects.exclude(pk=sh.id)
             r.update(IsComplete = 1)
-			
-            rf = RFIDRawData.objects.all()
-            rf.delete()
 
         except Exception as e:
             print(str(e))
@@ -401,9 +398,6 @@ def rfid(request):
             r = Shot.objects.exclude(pk=sh.id)
             r.update(IsComplete = 1)
 
-            rf = RFIDRawData.objects.all()
-            rf.delete()
-			
         except Exception as e:
             print(str(e))
             pass

@@ -1,17 +1,4 @@
- 
- 
- /** RF24Mesh_Example_Master.ino by TMRh20
-  * 
-  * Note: This sketch only functions on -Arduino Due-
-  *
-  * This example sketch shows how to manually configure a node via RF24Mesh as a master node, which
-  * will receive all data from sensor nodes.
-  *
-  * The nodes can change physical or logical position in the network, and reconnect through different
-  * routing nodes as required. The master node manages the address assignments for the individual nodes
-  * in a manner similar to DHCP.
-  *
-  */
+
   
 #include "RF24Mesh/RF24Mesh.h"  
 #include <RF24/RF24.h>
@@ -29,6 +16,8 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h> 
+#include <iostream>
+#include <chrono>
 
 
 //RF24 radio(RPI_V2_GPIO_P1_15, BCM2835_SPI_CS0, BCM2835_SPI_SPEED_8MHZ);  
@@ -41,6 +30,7 @@ uint32_t displayTimer = 0;
 //Used to synch time between nodes.  They'll each send their millis() value to master every second.
 uint32_t slaveNodeTime[7];
 uint32_t masterNodeTime[7];
+uint32_t masterTeeTime = 0;
 
 uint32_t voltage[7];
 
@@ -73,13 +63,20 @@ int temp = 0;
 int hum = 0;
 
 //Function to return current time in milliseconds.  This allows us to sync with the Arduino times received.
-//long long current_timestamp() {
-//    struct timeval te; 
-//    gettimeofday(&te, NULL); // get current time
-//    long long milliseconds = te.tv_sec*1000LL + te.tv_usec/1000; // caculate milliseconds
-//    // printf("milliseconds: %lld\n", milliseconds);
-//    return milliseconds;
+//unsigned long long current_timestamp() {
+//  	using namespace std::chrono;
+//  	system_clock::time_point tp = system_clock::now();
+//  	system_clock::duration dtn = tp.time_since_epoch();
+//  	std::uint64_t timeVar = dtn.count();
+
+//    return time(0);
 //}
+
+unsigned  long millis1(){
+  struct timespec tt;
+  clock_gettime(CLOCK_MONOTONIC, &tt);
+  return  tt.tv_nsec/1000000+ tt.tv_sec * 1000;
+  }
 
 // int getMilliCount(){
 	// timeb tb;
@@ -186,7 +183,9 @@ int main(int argc, char** argv) {
   printf("start\n");
   mesh.begin();
   radio.printDetails();
-  radio.setPALevel(RF24_PA_HIGH);  //options: RF24_PA_MIN, RF24_PA_LOW, RF24_PA_HIGH and RF24_PA_MAX
+  radio.setPALevel(RF24_PA_MAX);  //options: RF24_PA_MIN, RF24_PA_LOW, RF24_PA_HIGH and RF24_PA_MAX
+
+
 
 while(1)
 {
@@ -223,7 +222,11 @@ while(1)
     switch(header.type){
       // Display the incoming millis() values from the sensor nodes
     case 'M': //Calibration transmission from each node.
-		masterNodeTime[nodeID] = millis();  //determine local time.
+		masterNodeTime[nodeID] = millis1();  //determine local time.
+                delay(1);
+
+
+
 		network.read(header,&dat,sizeof(dat));
 		
 		slaveNodeTime[nodeID] = dat;  //determine slave time.
@@ -259,6 +262,16 @@ while(1)
 		printf("%d", nodeID);
 		printf("  SecondaryPing: ");
 		printf("%lu\n",secondaryPing);
+		
+		char TripInfoString[30];
+		char trip2Info[100];
+		strcpy(trip2Info,"shot2:");
+		sprintf(TripInfoString,"%lu",secondaryPing);
+		strcat(trip2Info,TripInfoString);
+		
+		SendDataToServer("localhost",10000,trip2Info);
+		
+		
 		break;
 	case 'S': //String
         network.read(header,&txt,17); 
@@ -355,22 +368,34 @@ while(1)
           //tripInfo[x]
           // 0: teeTripMasterTime
           // 1: teeTripDuration
-          // 2: hogTripMasterTime
+          // 2: teeHogSplit
           // 3: hogTripDuration
           // 4: tempC
           // 5: humidity
           // 6: distance1
           // 7: distance2
+		  
+
+		  
 		if(nodeID == 2){
 			temp = trip[3];
 			hum = trip[4];
 		}
         if((teeTripped == false) && (hogTripped == false)) {  //if no lasers have been tripped yet
           if((nodeID == 2) or (nodeID == 5)) { //if the tee is tripped
-            tripInfo[0] = trip[1] + ((long)masterNodeTime[nodeID] - (long)slaveNodeTime[nodeID]);
+			unsigned long long int millisSinceTrip = (unsigned long long int)millis1() - ((unsigned long long int)trip[1] + ((unsigned long long int)masterNodeTime[nodeID] - (unsigned long long int)slaveNodeTime[nodeID]));
+			//printf("%lu\n", millis1()); 
+			//printf("%ull\n",((unsigned)trip[1] + ((unsigned)masterNodeTime[nodeID] - (unsigned)slaveNodeTime[nodeID])));
+			//printf("%llu\n", millisSinceTrip); 
+			
+			
+            tripInfo[0] = (unsigned long long int)time(0) - (millisSinceTrip / 1000);  //UNIX time since epoch in seconds
+									//trip[1] + ((long)masterNodeTime[nodeID] - (long)slaveNodeTime[nodeID]);
+			masterTeeTime = trip[1] + ((long)masterNodeTime[nodeID] - (long)slaveNodeTime[nodeID]);
             tripInfo[1] = trip[2];
             tripInfo[4] = trip[3];
             tripInfo[5] = trip[4];
+            tripInfo[6] = trip[5];
             teeTripped = true;
           }
           else if((nodeID == 3) or (nodeID == 4)) {
@@ -379,18 +404,19 @@ while(1)
         }
         else if((teeTripped == true) && (hogTripped == false)) { //tee has already been tripped, hog has not.
           if((nodeID == 3) or (nodeID == 4)) { //if a hog is tripped
-            tripInfo[2] = trip[1] + ((long)masterNodeTime[nodeID] - (long)slaveNodeTime[nodeID]);
+            tripInfo[2] = trip[1] + (masterNodeTime[nodeID] - slaveNodeTime[nodeID]) - masterTeeTime;
+									//trip[1] + ((long)masterNodeTime[nodeID] - (long)slaveNodeTime[nodeID]);
             tripInfo[3] = trip[2];
-            tripInfo[6] = trip[5];
+            tripInfo[7] = trip[5];
             hogTripped = true;
           }
         }
         if((teeTripped == true) && (hogTripped == true)) {  //Check to see if a trip is complete.
           printf("----Shot Summary----\n");
 		  printf("Split time (seconds): ");
-		  printf("%.2f", ((float)tripInfo[2] - (float)tripInfo[0])/1000);
+		  printf("%.2f", ((float)tripInfo[2])/1000);
 		  printf("  Avg.FPS: ");
-		  printf("%.2f", 21/(((float)tripInfo[2] - (float)tripInfo[0])/1000)); //tee-hog distance is 21 feet.
+		  printf("%.2f", 21/(((float)tripInfo[2])/1000)); //tee-hog distance is 21 feet.
 		  printf("\n");
 		  
 		  printf("Tee FPS: ");
@@ -400,6 +426,38 @@ while(1)
 		  printf("---------------------\n");
           teeTripped = false;
           hogTripped = false;
+		  
+		  
+		char TripInfoString[30];
+		sprintf(nodeString,"%d",nodeID);
+		  
+		char trip1Info[100];
+		strcpy(trip1Info,"shot1:");
+		sprintf(TripInfoString,"%lu",tripInfo[0]);
+		strcat(trip1Info,TripInfoString);
+		strcat(trip1Info,",");
+		sprintf(TripInfoString,"%lu",tripInfo[1]);
+		strcat(trip1Info,TripInfoString);
+		strcat(trip1Info,",");
+		sprintf(TripInfoString,"%lu",tripInfo[2]);
+		strcat(trip1Info,TripInfoString);
+		strcat(trip1Info,",");
+		sprintf(TripInfoString,"%lu",tripInfo[3]);
+		strcat(trip1Info,TripInfoString);
+		strcat(trip1Info,",");
+		sprintf(TripInfoString,"%lu",tripInfo[4]);
+		strcat(trip1Info,TripInfoString);
+		strcat(trip1Info,",");
+		sprintf(TripInfoString,"%lu",tripInfo[5]);
+		strcat(trip1Info,TripInfoString);
+		strcat(trip1Info,",");
+		sprintf(TripInfoString,"%lu",tripInfo[6]);
+		strcat(trip1Info,TripInfoString);
+		strcat(trip1Info,",");
+		sprintf(TripInfoString,"%lu",tripInfo[7]);
+		strcat(trip1Info,TripInfoString);
+		
+		SendDataToServer("localhost",10000,trip1Info);
         }
         break;
     default:  network.read(header,0,0); 
@@ -435,6 +493,4 @@ while(1)
 return 0;
 }
 
-      
-      
       
